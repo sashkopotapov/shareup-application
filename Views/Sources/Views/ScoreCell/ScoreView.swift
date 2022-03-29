@@ -3,15 +3,18 @@ import UIKit
 
 final class ScoreView: UIView {
     
-    private let score: Score
+    private let word: String
+    private let tries: [String]
+    private lazy var resultViews: [UIView] = makeResultViews()
     private lazy var stackView: UIStackView = makeStackView()
     
-    init(score: Score) {
-        self.score = score
+    init(word: String, tries: [String]) {
+        self.word = word
+        self.tries = tries
         super.init(frame: .zero)
         addConstrainedSubview(
             stackView,
-            insets: .init(top: 8, left: 16, bottom: 8, right: 16),
+            insets: .init(top: 0, left: 0, bottom: 0, right: 0),
             edges: .all
         )
         setContentCompressionResistancePriority(.required, for: .vertical)
@@ -23,52 +26,63 @@ final class ScoreView: UIView {
     }
 }
 
+extension ScoreView {
+    func showWord() {
+        #warning("Do animation here")
+        for view in resultViews where view is ResultView {
+            (view as? ResultView)?.showLetter()
+        }
+    }
+    
+    func hideWord() {
+        #warning("Do animation here")
+        for view in resultViews where view is ResultView {
+            (view as? ResultView)?.hideLetter()
+        }
+    }
+}
+
 private extension ScoreView {
     func makeStackView() -> UIStackView {
-        let scores = score.tries.map({ result(for: $0, word: score.word) })
-        let rows = scores.map(makeRowStackView(for:))
-        let emptyRows = (0..<(6 - scores.count)).map({ _ in makeEmptyRowStackView() })
-        let stackView = UIStackView(arrangedSubviews: rows + emptyRows)
+        let stackView = UIStackView(arrangedSubviews: resultViews)
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.setContentCompressionResistancePriority(.required, for: .vertical)
         stackView.axis = .vertical
-        stackView.spacing = 0
+        stackView.spacing = 1
         stackView.alignment = .top
         stackView.distribution = .fillProportionally
         return stackView
     }
     
-    func makeRowStackView(for results: [LetterResult]) -> UIStackView {
-        let stackView = UIStackView(arrangedSubviews: results.map(makeResultView(for:)))
+    func makeResultViews() -> [UIView] {
+        let rows = tries.map({ makeRowStackView(for: result(for: $0, word: word), letters: Array($0)) })
+        let emptyRows = (0..<(6 - tries.count)).map({ _ in makeEmptyRowView() })
+        return rows + emptyRows
+    }
+    
+    func makeRowStackView(for results: [LetterResult], letters: [Character]) -> UIStackView {
+        let stackView = UIStackView(arrangedSubviews: zip(results, letters).map({ makeResultView(for: $0, letter: $1) }))
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.setContentCompressionResistancePriority(.required, for: .vertical)
+        stackView.setContentHuggingPriority(.required, for: .vertical)
         stackView.axis = .horizontal
         stackView.spacing = 0
         stackView.alignment = .leading
         return stackView
     }
     
-    func makeResultView(for result: LetterResult) -> UIView {
-        let view = UILabel()
-        switch result {
-            case .correct:
-                view.text = "🟩"
-            case .wrongPosition:
-                view.text = "🟨"
-            case .wrong:
-                view.text = "⬛"
-        }
+    func makeResultView(for result: LetterResult, letter: Character) -> UIView {
+        let view = ResultView(result: result, letter: letter)
         return view
     }
     
-    func makeEmptyRowStackView() -> UIStackView {
-        let views: [UIView] = (0...5).map({ _ in
-            let label = UILabel()
-            label.text = " "
-            return label
-        })
-        
-        return UIStackView(arrangedSubviews: views)
+    func makeEmptyRowView() -> UIView {
+        let label = UILabel()
+        label.text = " "
+        label.backgroundColor = .orange
+        label.setContentHuggingPriority(.defaultLow, for: .vertical)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }
 }
 
@@ -84,12 +98,10 @@ struct ScoreView_Preview: PreviewProvider {
 
 private struct GridView: UIViewRepresentable {
     func makeUIView(context _: Context) -> ScoreView {
-        ScoreView(score: .init(
-            id: 1,
-            date: .init(year: 2022, month: 3, day: 27),
+        ScoreView(
             word: "nymph",
             tries: ["train", "ponds", "blume", "nymph"]
-        ))
+        )
     }
     
     func updateUIView(_: ScoreView, context _: Context) {}

@@ -12,7 +12,8 @@ public class ScoreCell: UICollectionViewCell {
 private struct ScoreContentConfiguration: UIContentConfiguration, Hashable {
     var date: String
     var tries: String
-
+    var finalScore: Score?
+    
     var dateColor: UIColor = .label
     var triesColor: UIColor = .secondaryLabel
 
@@ -20,11 +21,13 @@ private struct ScoreContentConfiguration: UIContentConfiguration, Hashable {
         guard let score = score else {
             date = ""
             tries = ""
+            finalScore = nil
             return
         }
 
         date = score.date.stringValue
         tries = "\(score.tries.count) tries"
+        finalScore = score
     }
 
     func makeContentView() -> UIView & UIContentView {
@@ -60,13 +63,15 @@ private class ScoreContentView: UIView, UIContentView {
     private lazy var stackView: UIStackView = makeStackView()
     private lazy var dateLabel: UILabel = makeDateLabel()
     private lazy var triesLabel: UILabel = makeTriesLabel()
+    
+    private lazy var scoreView: UIView = makeScoreView()
 
     init(configuration: ScoreContentConfiguration) {
         _configuration = configuration
         super.init(frame: .zero)
         addConstrainedSubview(
             stackView,
-            insets: .init(top: 8, left: 16, bottom: 8, right: 16),
+            insets: .init(top: 8, left: 8, bottom: 8, right: 8),
             edges: .all
         )
         setContentCompressionResistancePriority(.required, for: .vertical)
@@ -88,7 +93,7 @@ private extension ScoreContentView {
     }
 
     func makeStackView() -> UIStackView {
-        let stackView = UIStackView(arrangedSubviews: [dateLabel, triesLabel])
+        let stackView = UIStackView(arrangedSubviews: [dateLabel, scoreView])
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.setContentCompressionResistancePriority(.required, for: .vertical)
         stackView.axis = .vertical
@@ -110,6 +115,12 @@ private extension ScoreContentView {
         label.textColor = .secondaryLabel
         return label
     }
+    
+    func makeScoreView() -> UIView {
+        guard var score = _configuration.finalScore else { return UIView() }
+        let view = ScoreView(word: score.word, tries: score.tries)
+        return view
+    }
 
     func makeLabel() -> UILabel {
         let label = UILabel(frame: .zero)
@@ -129,7 +140,7 @@ private extension ScoreContentView {
 
     struct ScoreCellView_Preview: PreviewProvider {
         static var previews: some View {
-            CellView().previewLayout(.fixed(width: 300, height: 60))
+            CellView().previewLayout(.fixed(width: 180, height: 180))
         }
     }
 
