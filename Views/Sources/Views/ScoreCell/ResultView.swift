@@ -65,6 +65,7 @@ private extension ResultView {
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .white
+        label.isHidden = true
         return label
     }
 }

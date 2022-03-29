@@ -29,15 +29,15 @@ final class ScoreView: UIView {
 extension ScoreView {
     func showWord() {
         #warning("Do animation here")
-        for view in resultViews where view is ResultView {
-            (view as? ResultView)?.showLetter()
+        for stack in resultViews where stack is UIStackView {
+            for view in stack.subviews where view is ResultView { (view as? ResultView)?.showLetter() }
         }
     }
     
     func hideWord() {
         #warning("Do animation here")
-        for view in resultViews where view is ResultView {
-            (view as? ResultView)?.hideLetter()
+        for stack in resultViews where stack is UIStackView {
+            for view in stack.subviews where view is ResultView { (view as? ResultView)?.hideLetter() }
         }
     }
 }

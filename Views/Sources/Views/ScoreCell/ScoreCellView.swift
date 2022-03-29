@@ -11,23 +11,23 @@ public class ScoreCell: UICollectionViewCell {
 
 private struct ScoreContentConfiguration: UIContentConfiguration, Hashable {
     var date: String
-    var tries: String
-    var finalScore: Score?
-    
-    var dateColor: UIColor = .label
-    var triesColor: UIColor = .secondaryLabel
-
+    var word: String
+    var tries: [String]
+    var isWordShown: Bool
+        
     init(score: Score? = nil) {
         guard let score = score else {
             date = ""
-            tries = ""
-            finalScore = nil
+            word = ""
+            tries = []
+            isWordShown = false
             return
         }
 
         date = score.date.stringValue
-        tries = "\(score.tries.count) tries"
-        finalScore = score
+        word = score.word
+        tries = score.tries
+        isWordShown = false
     }
 
     func makeContentView() -> UIView & UIContentView {
@@ -38,11 +38,9 @@ private struct ScoreContentConfiguration: UIContentConfiguration, Hashable {
         guard let state = state as? UICellConfigurationState else { return self }
         var updated = self
         if state.isSelected {
-            updated.dateColor = .label
-            updated.triesColor = .label
+            updated.isWordShown = true
         } else {
-            updated.dateColor = .label
-            updated.triesColor = .secondaryLabel
+            updated.isWordShown = false
         }
         return updated
     }
@@ -62,9 +60,8 @@ private class ScoreContentView: UIView, UIContentView {
 
     private lazy var stackView: UIStackView = makeStackView()
     private lazy var dateLabel: UILabel = makeDateLabel()
-    private lazy var triesLabel: UILabel = makeTriesLabel()
     
-    private lazy var scoreView: UIView = makeScoreView()
+    private lazy var scoreView: ScoreView = makeScoreView()
 
     init(configuration: ScoreContentConfiguration) {
         _configuration = configuration
@@ -87,9 +84,7 @@ private class ScoreContentView: UIView, UIContentView {
 private extension ScoreContentView {
     func apply(configuration: ScoreContentConfiguration) {
         dateLabel.text = configuration.date
-        dateLabel.textColor = configuration.dateColor
-        triesLabel.text = configuration.tries
-        triesLabel.textColor = configuration.triesColor
+        configuration.isWordShown ? scoreView.showWord() : scoreView.hideWord()
     }
 
     func makeStackView() -> UIStackView {
@@ -116,9 +111,8 @@ private extension ScoreContentView {
         return label
     }
     
-    func makeScoreView() -> UIView {
-        guard var score = _configuration.finalScore else { return UIView() }
-        let view = ScoreView(word: score.word, tries: score.tries)
+    func makeScoreView() -> ScoreView {
+        let view = ScoreView(word: _configuration.word, tries: _configuration.tries)
         return view
     }
 
