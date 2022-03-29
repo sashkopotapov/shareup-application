@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ -z "$1" ]; then
+  echo "warning: Specify files or directories to format"
+  exit 1
+fi
+
+if command -v swiftformat >/dev/null 2>&1; then
+  swiftformat "$@"
+else
+  echo "warning: Install swiftformat by running 'brew install swiftformat'"
+fi
