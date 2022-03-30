@@ -7,7 +7,7 @@ final class ScoreView: UIView {
     private let tries: [String]
     private lazy var resultViews: [UIView] = makeResultViews()
     private lazy var stackView: UIStackView = makeStackView()
-    private lazy var animator: UIViewPropertyAnimator = makeAnimator()
+    private lazy var animators: [UIViewPropertyAnimator] = makeAnimators()
     init(word: String, tries: [String]) {
         self.word = word
         self.tries = tries
@@ -29,31 +29,37 @@ final class ScoreView: UIView {
 extension ScoreView {
     func showWord() {
         for (index, row) in resultViews.enumerated() where row is UIStackView {
-            
             guard let rowStack = row as? UIStackView else { return }
             
-            UIView.animate(withDuration: 0.2, delay: Double(index) * 0.2, options: .curveLinear, animations: {
+            let animator = animators[index]
+            setAnimatorToInactiveState(animator)
+            
+            animator.addAnimations({
                 for view in rowStack.arrangedSubviews where view is ResultView {
                     var transform = CATransform3DIdentity
                     transform.m34 = 1.0 / 500.0
                     view.layer.transform = CATransform3DRotate(transform, CGFloat(180 * Double.pi / 180), 1, 0, 0)
                 }
-            }, completion: { completed in
-                guard completed else { return }
+            })
+            
+            animator.addCompletion({ position in
+                guard index < rowStack.arrangedSubviews.count, position == .end else { return }
                 for view in rowStack.arrangedSubviews where view is ResultView {
                     view.layer.transform = CATransform3DIdentity
                     (view as? ResultView)?.showLetter()
                 }
             })
             
+            animator.startAnimation(afterDelay: 0.1 * Double(index))
         }
     }
     
     func hideWord() {
-        for row in resultViews where row is UIStackView {
+        for (index, row) in resultViews.enumerated() where row is UIStackView {
             guard let rowStack = row as? UIStackView else { return }
+            setAnimatorToInactiveState(animators[index])
             for view in rowStack.arrangedSubviews where view is ResultView {
-                view.layer.removeAllAnimations()
+                view.layer.transform = CATransform3DIdentity
                 (view as? ResultView)?.hideLetter()
             }
         }
@@ -61,6 +67,11 @@ extension ScoreView {
 }
 
 private extension ScoreView {
+    func setAnimatorToInactiveState(_ animator: UIViewPropertyAnimator) {
+        if animator.state == .active { animator.stopAnimation(false) }
+        if animator.state == .stopped { animator.finishAnimation(at: .start) }
+    }
+    
     func makeStackView() -> UIStackView {
         let stackView = UIStackView(arrangedSubviews: resultViews)
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -103,9 +114,8 @@ private extension ScoreView {
         return label
     }
     
-    func makeAnimator() -> UIViewPropertyAnimator {
-        let animator = UIViewPropertyAnimator(duration: 1, curve: .linear)
-        return animator
+    func makeAnimators() -> [UIViewPropertyAnimator] {
+        return (0..<6).map({ _ in UIViewPropertyAnimator(duration: 0.2, curve: .linear) })
     }
 }
 
