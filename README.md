@@ -1,8 +1,9 @@
-# iOS Engineering Challenge
+# iOS Engineering Challenge at Shareup
 
 <img src="https://res.craft.do/user/full/d7ce0db3-3096-bf97-e0e4-71b048d8674f/doc/81B22530-7446-4D43-B154-92CBEA68BCD2/78225F22-3B68-483D-B493-54BD514D3976_2/DmkmXx4n1AJn4E00EbNKwyccMtRP08ThXddg1PtOsScz/IMG_2D6A85CAA39E-1.jpeg" alt="Screenshot of Wordle" style="height:446px" height="446">
 
 # Description
+This is my solution to the engineering challenge at Shareup.
 
 At Shareup, we love to play [Wordle](https://www.nytimes.com/games/wordle/). We have a channel in our company Discord dedicated to sharing our Wordle scores each day.
 
