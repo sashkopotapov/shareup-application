@@ -9,7 +9,7 @@ final class ScoreView: UIView {
     private lazy var stackView: UIStackView = makeStackView()
     private lazy var animators: [UIViewPropertyAnimator] = makeAnimators()
     
-    private let animationFlipTime: CGFloat = 0.1
+    private let animationFlipTime: CGFloat = 0.2
     
     init(word: String, tries: [String]) {
         self.word = word
@@ -46,7 +46,7 @@ extension ScoreView {
             })
             
             animator.addCompletion({ position in
-                guard index < rowStack.arrangedSubviews.count, position == .end else { return }
+                guard index <= rowStack.arrangedSubviews.count, position == .end else { return }
                 for view in rowStack.arrangedSubviews where view is ResultView {
                     view.layer.transform = CATransform3DIdentity
                     (view as? ResultView)?.showLetter()

@@ -46,7 +46,7 @@ private extension ScoresViewController {
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
 
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                              heightDimension: .absolute(175))
+                                              heightDimension: .absolute(210))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 2)
         let spacing = CGFloat(5)
         group.interItemSpacing = .fixed(spacing)
