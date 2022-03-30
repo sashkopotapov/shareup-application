@@ -8,6 +8,9 @@ final class ScoreView: UIView {
     private lazy var resultViews: [UIView] = makeResultViews()
     private lazy var stackView: UIStackView = makeStackView()
     private lazy var animators: [UIViewPropertyAnimator] = makeAnimators()
+    
+    private let animationFlipTime: CGFloat = 0.1
+    
     init(word: String, tries: [String]) {
         self.word = word
         self.tries = tries
@@ -50,7 +53,7 @@ extension ScoreView {
                 }
             })
             
-            animator.startAnimation(afterDelay: 0.1 * Double(index))
+            animator.startAnimation(afterDelay: animationFlipTime * Double(index))
         }
     }
     
