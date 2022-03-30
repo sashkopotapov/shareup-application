@@ -7,7 +7,7 @@ final class ScoreView: UIView {
     private let tries: [String]
     private lazy var resultViews: [UIView] = makeResultViews()
     private lazy var stackView: UIStackView = makeStackView()
-    
+    private lazy var animator: UIViewPropertyAnimator = makeAnimator()
     init(word: String, tries: [String]) {
         self.word = word
         self.tries = tries
@@ -28,16 +28,34 @@ final class ScoreView: UIView {
 
 extension ScoreView {
     func showWord() {
-        #warning("Do animation here")
-        for stack in resultViews where stack is UIStackView {
-            for view in stack.subviews where view is ResultView { (view as? ResultView)?.showLetter() }
+        for (index, row) in resultViews.enumerated() where row is UIStackView {
+            
+            guard let rowStack = row as? UIStackView else { return }
+            
+            UIView.animate(withDuration: 0.2, delay: Double(index) * 0.2, options: .curveLinear, animations: {
+                for view in rowStack.arrangedSubviews where view is ResultView {
+                    var transform = CATransform3DIdentity
+                    transform.m34 = 1.0 / 500.0
+                    view.layer.transform = CATransform3DRotate(transform, CGFloat(180 * Double.pi / 180), 1, 0, 0)
+                }
+            }, completion: { completed in
+                guard completed else { return }
+                for view in rowStack.arrangedSubviews where view is ResultView {
+                    view.layer.transform = CATransform3DIdentity
+                    (view as? ResultView)?.showLetter()
+                }
+            })
+            
         }
     }
     
     func hideWord() {
-        #warning("Do animation here")
-        for stack in resultViews where stack is UIStackView {
-            for view in stack.subviews where view is ResultView { (view as? ResultView)?.hideLetter() }
+        for row in resultViews where row is UIStackView {
+            guard let rowStack = row as? UIStackView else { return }
+            for view in rowStack.arrangedSubviews where view is ResultView {
+                view.layer.removeAllAnimations()
+                (view as? ResultView)?.hideLetter()
+            }
         }
     }
 }
@@ -48,7 +66,7 @@ private extension ScoreView {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.setContentCompressionResistancePriority(.required, for: .vertical)
         stackView.axis = .vertical
-        stackView.spacing = 1
+        stackView.spacing = 5
         stackView.alignment = .top
         stackView.distribution = .fillProportionally
         return stackView
@@ -79,10 +97,15 @@ private extension ScoreView {
     func makeEmptyRowView() -> UIView {
         let label = UILabel()
         label.text = " "
-        label.backgroundColor = .orange
+        label.backgroundColor = .clear
         label.setContentHuggingPriority(.defaultLow, for: .vertical)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }
+    
+    func makeAnimator() -> UIViewPropertyAnimator {
+        let animator = UIViewPropertyAnimator(duration: 1, curve: .linear)
+        return animator
     }
 }
 

@@ -13,6 +13,7 @@ private struct ScoreContentConfiguration: UIContentConfiguration, Hashable {
     var date: String
     var word: String
     var tries: [String]
+    var attempts: String
     var isWordShown: Bool
         
     init(score: Score? = nil) {
@@ -20,6 +21,7 @@ private struct ScoreContentConfiguration: UIContentConfiguration, Hashable {
             date = ""
             word = ""
             tries = []
+            attempts = "Wordly 0/0"
             isWordShown = false
             return
         }
@@ -28,6 +30,13 @@ private struct ScoreContentConfiguration: UIContentConfiguration, Hashable {
         word = score.word
         tries = score.tries
         isWordShown = false
+        
+        guard let dayNum = wordleNumberFromDate(dayDate: score.date) else {
+            attempts = ""
+            return
+        }
+        
+        attempts = "Wordle \(dayNum) \(score.tries.count)/6"
     }
 
     func makeContentView() -> UIView & UIContentView {
@@ -47,11 +56,13 @@ private struct ScoreContentConfiguration: UIContentConfiguration, Hashable {
 }
 
 private class ScoreContentView: UIView, UIContentView {
-    private var _configuration: ScoreContentConfiguration
+    private var _configuration: ScoreContentConfiguration!
     var configuration: UIContentConfiguration {
         get { _configuration }
         set {
-            guard let config = newValue as? ScoreContentConfiguration
+            // Had to add this distinction since it is being set twice while selection and breaks animation chain
+            // TODO Investigate the reason behind it later
+            guard let config = newValue as? ScoreContentConfiguration, config != _configuration
             else { return }
             _configuration = config
             apply(configuration: config)
@@ -59,6 +70,7 @@ private class ScoreContentView: UIView, UIContentView {
     }
 
     private lazy var stackView: UIStackView = makeStackView()
+    private lazy var scoreLabel: UILabel = makeScoreLabel()
     private lazy var dateLabel: UILabel = makeDateLabel()
     
     private lazy var scoreView: ScoreView = makeScoreView()
@@ -84,11 +96,12 @@ private class ScoreContentView: UIView, UIContentView {
 private extension ScoreContentView {
     func apply(configuration: ScoreContentConfiguration) {
         dateLabel.text = configuration.date
+        scoreLabel.text = configuration.attempts
         configuration.isWordShown ? scoreView.showWord() : scoreView.hideWord()
     }
 
     func makeStackView() -> UIStackView {
-        let stackView = UIStackView(arrangedSubviews: [dateLabel, scoreView])
+        let stackView = UIStackView(arrangedSubviews: [dateLabel, scoreLabel, scoreView])
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.setContentCompressionResistancePriority(.required, for: .vertical)
         stackView.axis = .vertical
@@ -99,7 +112,14 @@ private extension ScoreContentView {
 
     func makeDateLabel() -> UILabel {
         let label = makeLabel()
-        label.font = UIFont.preferredFont(forTextStyle: .title3)
+        label.font = UIFont.preferredFont(forTextStyle: .footnote)
+        label.textColor = .secondaryLabel
+        return label
+    }
+    
+    func makeScoreLabel() -> UILabel {
+        let label = makeLabel()
+        label.font = UIFont.preferredFont(forTextStyle: .body)
         label.textColor = .label
         return label
     }
