@@ -39,9 +39,7 @@ extension ScoreView {
             
             animator.addAnimations({
                 for view in rowStack.arrangedSubviews where view is ResultView {
-                    var transform = CATransform3DIdentity
-                    transform.m34 = 1.0 / 500.0
-                    view.layer.transform = CATransform3DRotate(transform, CGFloat(180 * Double.pi / 180), 1, 0, 0)
+                    view.layer.transform = CATransform3DRotate(CATransform3DIdentity, CGFloat(180 * Double.pi / 180), 1, 0, 0)
                 }
             })
             
