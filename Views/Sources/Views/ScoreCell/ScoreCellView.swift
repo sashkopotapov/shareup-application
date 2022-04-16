@@ -154,7 +154,7 @@ private extension ScoreContentView {
 
     struct ScoreCellView_Preview: PreviewProvider {
         static var previews: some View {
-            CellView().previewLayout(.fixed(width: 180, height: 180))
+            CellView().previewLayout(.fixed(width: 180, height: 210))
         }
     }
 
@@ -163,8 +163,8 @@ private extension ScoreContentView {
             ScoreContentView(configuration: .init(score: .init(
                 id: 1,
                 date: .init(year: 2022, month: 3, day: 27),
-                word: "nymph",
-                tries: ["train", "ponds", "blume", "nymph"]
+                word: "shall",
+                tries: ["mouth","happy","ahead","chias", "shank", "shall"]
             )))
         }
 

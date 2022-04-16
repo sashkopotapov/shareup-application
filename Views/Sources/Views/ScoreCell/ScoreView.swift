@@ -39,7 +39,7 @@ extension ScoreView {
             
             animator.addAnimations({
                 for view in rowStack.arrangedSubviews where view is ResultView {
-                    view.layer.transform = CATransform3DRotate(CATransform3DIdentity, CGFloat(180 * Double.pi / 180), 1, 0, 0)
+                    view.layer.transform = CATransform3DRotate(CATransform3DIdentity, CGFloat(Double.pi), 1, 0, 0)
                 }
             })
             
@@ -86,8 +86,7 @@ private extension ScoreView {
     
     func makeResultViews() -> [UIView] {
         let rows = tries.map({ makeRowStackView(for: result(for: $0, word: word), letters: Array($0)) })
-        let emptyRows = (0..<(6 - tries.count)).map({ _ in makeEmptyRowView() })
-        return rows + emptyRows
+        return rows
     }
     
     func makeRowStackView(for results: [LetterResult], letters: [Character]) -> UIStackView {
@@ -109,7 +108,7 @@ private extension ScoreView {
     func makeEmptyRowView() -> UIView {
         let label = UILabel()
         label.text = " "
-        label.backgroundColor = .clear
+        label.backgroundColor = .orange
         label.setContentHuggingPriority(.defaultLow, for: .vertical)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label

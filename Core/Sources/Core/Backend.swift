@@ -3,11 +3,16 @@ import Foundation
 
 public struct Backend {
     public var getAllScores: () -> AnyPublisher<[Score], BackendError>
+    public var addNewScore: (Score) -> AnyPublisher<Score, BackendError>
 }
 
 public extension Backend {
     var typeErasedGetAllScores: AnyPublisher<[Score], Error> {
-        getAllScores().mapError { $0 as Error }.eraseToAnyPublisher()
+        return getAllScores().mapError({ $0 as Error }).eraseToAnyPublisher()
+    }
+    
+    var typeErasedAddNewScore: (Score) -> AnyPublisher<Score, Error> {
+        return { addNewScore($0).mapError({ $0 as Error }).eraseToAnyPublisher() }
     }
 }
 
@@ -15,9 +20,12 @@ public extension Backend {
     static func live(accessToken: String) -> Self {
         let session = URLSession(configuration: .default)
         let decoder = JSONDecoder()
-
+        let encoder = JSONEncoder()
+        
+        let url = URL(string: "https://wordle.shareup.fun/scores")
+        
         return Self(getAllScores: {
-            guard let url = URL(string: "https://wordle.shareup.fun/scores") else {
+            guard let url = url else {
                 return Fail<[Score], BackendError>(
                     error: BackendError
                         .couldNotPrepareRequest
@@ -47,13 +55,61 @@ public extension Backend {
                     }
                 }
                 .eraseToAnyPublisher()
+        }, addNewScore: { score in
+            guard let url = url else {
+                return Fail<Score, BackendError>(
+                    error: BackendError
+                        .couldNotPrepareRequest
+                )
+                .eraseToAnyPublisher()
+            }
+            
+            var request = URLRequest(url: url)
+            request.addValue(accessToken, forHTTPHeaderField: "X-Authorization")
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            request.httpMethod = "POST"
+            do {
+                request.httpBody = try encoder.encode(score)
+            } catch {
+                return Fail<Score, BackendError>(
+                    error: BackendError
+                        .encodingError(error as NSError)
+                )
+                .eraseToAnyPublisher()
+            }
+        
+            return session
+                .dataTaskPublisher(for: request)
+                .mapError { BackendError.urlError($0) }
+                .tryMap { (data: Data, response: URLResponse) -> Data in
+                    guard let httpResponse = response as? HTTPURLResponse,
+                          httpResponse.statusCode == 200
+                    else { throw BackendError.invalidResponse(response) }
+                    return data
+                }
+                .decode(type: Score.self, decoder: decoder)
+                .mapError { error in
+                    if let backendError = error as? BackendError {
+                        return backendError
+                    } else {
+                        return BackendError.decodingError(error as NSError)
+                    }
+                }
+                .eraseToAnyPublisher()
         })
     }
 
     #if DEBUG
         static var test: Self {
-            Self {
+            Self(getAllScores: {
                 Just([
+                    .init(
+                        id: 261,
+                        date: .init(year: 2022, month: 3, day: 9),
+                        word: "craze",
+                        tries: ["grail", "track", "cramp", "crabs","crazy","craze"]
+                    ),
                     .init(
                         id: 262,
                         date: .init(year: 2022, month: 3, day: 8),
@@ -75,7 +131,11 @@ public extension Backend {
                 ])
                 .setFailureType(to: BackendError.self)
                 .eraseToAnyPublisher()
-            }
+            }, addNewScore: { score in
+                return Just(score)
+                    .setFailureType(to: BackendError.self)
+                    .eraseToAnyPublisher()
+            })
         }
     #endif
 }
@@ -85,4 +145,5 @@ public enum BackendError: Error, Equatable {
     case urlError(URLError)
     case invalidResponse(URLResponse)
     case decodingError(NSError)
+    case encodingError(NSError)
 }
