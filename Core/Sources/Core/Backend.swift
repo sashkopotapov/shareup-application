@@ -106,7 +106,7 @@ public extension Backend {
                 Just([
                     .init(
                         id: 261,
-                        date: .init(year: 2022, month: 3, day: 9),
+                        date: .init(year: 2022, month: 3, day: 7),
                         word: "craze",
                         tries: ["grail", "track", "cramp", "crabs","crazy","craze"]
                     ),

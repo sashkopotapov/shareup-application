@@ -16,6 +16,7 @@ public class ScoresViewController: UIViewController {
     private lazy var collectionView: UICollectionView = makeCollectionView()
     private lazy var dataSource: UICollectionViewDiffableDataSource<Section, Int> = makeDataSource()
     private lazy var addButton: UIBarButtonItem = makeAddButton()
+    private lazy var layout: WordleLayout = makeLayout()
     
     private var didApplyInitialSnapshot = false
     
@@ -38,6 +39,7 @@ public class ScoresViewController: UIViewController {
         view.addConstrainedSubview(collectionView)
         scoresPublisher
             .replaceError(with: [])
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: onReceiveScores)
             .store(in: &cancellables)
@@ -61,7 +63,7 @@ public class ScoresViewController: UIViewController {
             
             guard wordPrepared.count == 5, triesArray.count > 0, triesArray.count <= 6, triesArray.filter({ $0.count != 5 }).isEmpty  else { return }
             
-            let components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+            let components = Calendar.current.dateComponents([.year, .month, .day], from: generateRandomDate())
             guard let year = components.year, let month = components.month, let day = components.day else { return }
             
             let dayDate = DayDate(year: year, month: month, day: day)
@@ -74,22 +76,13 @@ public class ScoresViewController: UIViewController {
 
 private extension ScoresViewController {
     func makeCollectionView() -> UICollectionView {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                              heightDimension: .fractionalHeight(1.0))
-        let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                               heightDimension: .absolute(210))
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 2)
-        let spacing = CGFloat(5)
-        group.interItemSpacing = .fixed(spacing)
-        
-        let section = NSCollectionLayoutSection(group: group)
-        section.interGroupSpacing = spacing
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
-        
-        let layout = UICollectionViewCompositionalLayout(section: section)
         return UICollectionView(frame: .zero, collectionViewLayout: layout)
+    }
+    
+    func makeLayout() -> WordleLayout {
+        let layout = WordleLayout()
+        layout.delegate = self
+        return layout
     }
     
     func makeDataSource() -> UICollectionViewDiffableDataSource<Section, Int> {
@@ -125,8 +118,17 @@ private extension ScoresViewController {
             var snapshot = NSDiffableDataSourceSnapshot<Section, Int>()
             snapshot.appendSections([.scores])
             snapshot.appendItems(scores.map(\.id))
-            self.dataSource.apply(snapshot, animatingDifferences: true)
+            
+            self.layout.resetCache()
+            
+            self.dataSource.apply(snapshot, animatingDifferences: animate)
         }
+    }
+}
+
+extension ScoresViewController: WordleLayoutDelegate {
+    func collectionView(_ collectionView: UICollectionView, heightForScoreAtIndexPath indexPath: IndexPath) -> CGFloat {
+        return 50.0 + CGFloat((scores.values[indexPath.row].tries.count) * 22)
     }
 }
 
@@ -149,3 +151,13 @@ struct ScoresView: UIViewControllerRepresentable {
 }
 
 #endif
+
+func generateRandomDate() -> Date {
+    let date = Date()
+    let calendar = Calendar.current
+    var dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
+    let days = calendar.range(of: .day, in: .month, for: date)
+    let randomDay = days!.randomElement()
+    dateComponents.setValue(randomDay, for: .day)
+    return calendar.date(from: dateComponents)!
+}

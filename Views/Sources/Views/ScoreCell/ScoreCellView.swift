@@ -31,12 +31,7 @@ private struct ScoreContentConfiguration: UIContentConfiguration, Hashable {
         tries = score.tries
         isWordShown = false
         
-        guard let dayNum = wordleNumberFromDate(dayDate: score.date) else {
-            attempts = ""
-            return
-        }
-        
-        attempts = "Wordle \(dayNum) \(score.tries.count)/6"
+        attempts = "Wordle \(score.id) \(score.tries.count)/6"
     }
 
     func makeContentView() -> UIView & UIContentView {

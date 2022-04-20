@@ -17,8 +17,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let window = UIWindow(windowScene: scene)
         self.window = window
         
-        let backend = Backend.test//live(accessToken: "SASHKO-POTAPOV-7B591EF")
+        let backend = Backend.test //live(accessToken: "SASHKO-POTAPOV-7B591EF")
         let scoresSubject = CurrentValueSubject<[Score], Error>([])
+        let scoresPublisher = scoresSubject
+            .map({ $0.sorted(by: \.id) })
+            .eraseToAnyPublisher()
         
         backend.typeErasedGetAllScores
             .sink(receiveCompletion: { completion in
@@ -40,7 +43,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             .store(in: &cancellables)
         
         let root = UINavigationController(rootViewController: ScoresViewController(
-            scoresPublisher: scoresSubject.print("---V").eraseToAnyPublisher(), addAction: { addNewScoreSubject.send($0) }
+            scoresPublisher: scoresPublisher, addAction: { addNewScoreSubject.send($0) }
         ))
         
         self.root = root
@@ -55,3 +58,5 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_: UIScene) {}
     func sceneDidEnterBackground(_: UIScene) {}
 }
+
+
