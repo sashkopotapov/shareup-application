@@ -19,8 +19,10 @@ class WordleLayout: UICollectionViewLayout {
     
     private var cache: [UICollectionViewLayoutAttributes] = []
     
-    private var contentHeight: CGFloat = 0
+    private var deletingIndexPaths = [IndexPath]()
+    private var insertingIndexPaths = [IndexPath]()
     
+    private var contentHeight: CGFloat = 0
     private var contentWidth: CGFloat {
         guard let collectionView = collectionView else {
             return 0
@@ -31,6 +33,10 @@ class WordleLayout: UICollectionViewLayout {
     
     override var collectionViewContentSize: CGSize {
         return CGSize(width: contentWidth, height: contentHeight)
+    }
+    
+    func resetCache() {
+        cache.removeAll()
     }
     
     override func prepare() {
@@ -92,7 +98,58 @@ class WordleLayout: UICollectionViewLayout {
         return cache[indexPath.item]
     }
     
-    func resetCache() {
-        cache.removeAll()
+    // MARK: Attributes for Updated Items
+
+    override func finalLayoutAttributesForDisappearingItem(at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        guard let attributes = super.finalLayoutAttributesForDisappearingItem(at: itemIndexPath) else { return nil }
+
+        if !deletingIndexPaths.isEmpty {
+            if deletingIndexPaths.contains(itemIndexPath) {
+
+                attributes.transform3D = CATransform3DRotate(CATransform3DIdentity, CGFloat(Double.pi), 1, 0, 0) // CGAffineTransform(scaleX: 0.5, y: 0.5)
+                attributes.alpha = 0.0
+                attributes.zIndex = 0
+            }
+        }
+
+        return attributes
+    }
+
+    override func initialLayoutAttributesForAppearingItem(at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        guard let attributes = super.initialLayoutAttributesForAppearingItem(at: itemIndexPath) else { return nil }
+
+        if insertingIndexPaths.contains(itemIndexPath) {
+            attributes.transform3D = CATransform3DRotate(CATransform3DIdentity, CGFloat(Double.pi), 1, 0, 0) // CGAffineTransform(scaleX: 0.5, y: 0.5)
+            attributes.alpha = 0.0
+            attributes.zIndex = 0
+        }
+
+        return attributes
+    }
+
+    // MARK: Updates
+
+    override func prepare(forCollectionViewUpdates updateItems: [UICollectionViewUpdateItem]) {
+        super.prepare(forCollectionViewUpdates: updateItems)
+
+        for update in updateItems {
+            switch update.updateAction {
+                case .delete:
+                    guard let indexPath = update.indexPathBeforeUpdate else { return }
+                    deletingIndexPaths.append(indexPath)
+                case .insert:
+                    guard let indexPath = update.indexPathAfterUpdate else { return }
+                    insertingIndexPaths.append(indexPath)
+                default:
+                    break
+            }
+        }
+    }
+
+    override func finalizeCollectionViewUpdates() {
+        super.finalizeCollectionViewUpdates()
+
+        deletingIndexPaths.removeAll()
+        insertingIndexPaths.removeAll()
     }
 }

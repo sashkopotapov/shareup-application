@@ -20,7 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let backend = Backend.test //live(accessToken: "SASHKO-POTAPOV-7B591EF")
         let scoresSubject = CurrentValueSubject<[Score], Error>([])
         let scoresPublisher = scoresSubject
-            .map({ $0.sorted(by: \.id) })
+            .map({ $0.sorted(by: { $0.id > $1.id }) })
             .eraseToAnyPublisher()
         
         backend.typeErasedGetAllScores

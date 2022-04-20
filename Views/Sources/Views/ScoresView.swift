@@ -48,22 +48,23 @@ public class ScoresViewController: UIViewController {
     func presentAlertController() {
         let alertController = UIAlertController(title: "Add result", message: "Add today`s Wordle result.", preferredStyle: .alert)
         alertController.addTextField(configurationHandler: {
-            $0.placeholder = "word"
+            $0.placeholder = "rebus"
         })
         
         alertController.addTextField(configurationHandler: {
-            $0.placeholder = "tries,guesses,other"
+            $0.placeholder = "arise,route,rules,rebus"
         })
         
         alertController.addAction(.init(title: "Add", style: .default, handler: { [weak alertController, weak self] _ in
+
             guard let word = alertController?.textFields?[0].text,
                   let tries = alertController?.textFields?[1].text else { return }
             let wordPrepared = word.replacingOccurrences(of: " ", with: "")
             let triesArray =  tries.replacingOccurrences(of: " ", with: "").components(separatedBy: ",")
-            
+
             guard wordPrepared.count == 5, triesArray.count > 0, triesArray.count <= 6, triesArray.filter({ $0.count != 5 }).isEmpty  else { return }
-            
-            let components = Calendar.current.dateComponents([.year, .month, .day], from: generateRandomDate())
+
+            let components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
             guard let year = components.year, let month = components.month, let day = components.day else { return }
             
             let dayDate = DayDate(year: year, month: month, day: day)
@@ -120,7 +121,7 @@ private extension ScoresViewController {
             snapshot.appendItems(scores.map(\.id))
             
             self.layout.resetCache()
-            
+        
             self.dataSource.apply(snapshot, animatingDifferences: animate)
         }
     }
